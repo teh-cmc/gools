@@ -27,16 +27,28 @@ func (el *ErrLog) Toggle(toggle bool) {
 	}
 }
 
-// LogError logs the given error iff logging is enabled.
+// Log logs the given error iff logging is enabled.
+func (el *ErrLog) Log(err error) error {
+	el32 := unsafe.Pointer(el)
+	if err != nil && atomic.LoadUint32((*uint32)(el32)) == 1 {
+		log.Printf("%s\n", err)
+	}
+	return err
+}
+
+// LogST logs the given error iff logging is enabled.
 //
 // The first 4096 characters from the stacktrace of the calling goroutine are
 // also printed with the error.
-func (el *ErrLog) LogError(err error) error {
+func (el *ErrLog) LogST(err error) error {
 	el32 := unsafe.Pointer(el)
 	if err != nil && atomic.LoadUint32((*uint32)(el32)) == 1 {
 		buf := make([]byte, 4096)
-		runtime.Stack(buf, false)
-		log.Printf("%s\n%s\n", err, buf)
+		ellipses := ""
+		if runtime.Stack(buf, false) >= 4096 {
+			ellipses = "..."
+		}
+		log.Printf("%s\n%s\n%s", err, buf, ellipses)
 	}
 
 	return err
