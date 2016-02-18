@@ -9,3 +9,9 @@ Various micro-tools for golang.
 `go get github.com/teh-cmc/gools/counter`
 
 `counter` implements an atomic counter with a threshold that, once reached, runs a set of user-defined callbacks.
+
+## ErrLog [![GoDoc](http://img.shields.io/badge/go-documentation-blue.svg?style=plastic)](http://godoc.org/github.com/teh-cmc/gools/errlog)
+
+`go get github.com/teh-cmc/gools/errlog`
+
+`errlog` exposes a global thread-safe error logger with on/off capability.
