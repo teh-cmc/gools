@@ -21,14 +21,14 @@ func TestErrlog(t *testing.T) {
 	go func() {
 		err := fmt.Errorf("error")
 		for i := 0; i < 1e6; i++ {
-			ErrLogger.Log(err)
+			_ = ErrLogger.Log(err)
 		}
 		wg.Done()
 	}()
 	go func() {
 		err := fmt.Errorf("errorST")
 		for i := 0; i < 1e6; i++ {
-			ErrLogger.LogST(err)
+			_ = ErrLogger.LogST(err)
 		}
 		wg.Done()
 	}()
