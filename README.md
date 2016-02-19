@@ -15,3 +15,9 @@ Various micro-tools for golang.
 `go get github.com/teh-cmc/gools/errlog`
 
 `errlog` exposes a global thread-safe error logger with on/off capability.
+
+## ZeroCopy [![GoDoc](http://img.shields.io/badge/go-documentation-blue.svg?style=plastic)](http://godoc.org/github.com/teh-cmc/gools/zerocopy)
+
+`go get github.com/teh-cmc/gools/zerocopy`
+
+`zerocopy` exposes various unsafe functions to do copy-less casts.
