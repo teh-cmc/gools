@@ -21,3 +21,9 @@ Various micro-tools for golang.
 `go get github.com/teh-cmc/gools/zerocopy`
 
 `zerocopy` exposes various unsafe functions to do copy-less casts.
+
+## Probe [![GoDoc](http://img.shields.io/badge/go-documentation-blue.svg?style=plastic)](http://godoc.org/github.com/teh-cmc/gools/probe)
+
+`go get github.com/teh-cmc/gools/probe`
+
+`probe` exposes various helpers for working with probes.
