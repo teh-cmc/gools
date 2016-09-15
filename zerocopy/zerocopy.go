@@ -20,3 +20,16 @@ func StringToByteSlice(s string) (b []byte) {
 	bh.Len, bh.Cap, bh.Data = sh.Len, sh.Len, sh.Data
 	return
 }
+
+// ByteSliceToString converts a []byte to a string without any copy.
+//
+// This is obviously particularly unsafe and should be used at your own risk.
+//
+// NOTE: do not ever use the returned string once the original []byte went
+// out of scope.
+func ByteSliceToString(b []byte) (s string) {
+	bh := (*reflect.SliceHeader)(unsafe.Pointer(&b))
+	sh := (*reflect.StringHeader)(unsafe.Pointer(&s))
+	sh.Len, sh.Data = bh.Len, bh.Data
+	return
+}
