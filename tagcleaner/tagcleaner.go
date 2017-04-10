@@ -10,7 +10,7 @@ import (
 // find along the way.
 func Clean(t reflect.Type) reflect.Type {
 	switch t.Kind() {
-	case reflect.Ptr, reflect.Map:
+	case reflect.Ptr, reflect.Map, reflect.Array, reflect.Slice:
 		return Clean(t.Elem())
 	case reflect.Struct:
 		fields := make([]reflect.StructField, t.NumField())

@@ -32,6 +32,13 @@ func TestTagcleaner_Clean(t *testing.T) {
 			A string "tag-G-A"
 			B string "tag-G-B"
 		} "tag-G"
+		H [3]*struct {
+			A []struct {
+				A int "tag-H-A-A"
+			}
+			B string "tag-H-B"
+			C string "tag-H-C"
+		} "tag-G"
 	}
 
 	raw := fmt.Sprintf("%s", reflect.TypeOf(someStruct{}))
