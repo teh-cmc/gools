@@ -10,8 +10,14 @@ import (
 // find along the way.
 func Clean(t reflect.Type) reflect.Type {
 	switch t.Kind() {
-	case reflect.Ptr, reflect.Map, reflect.Array, reflect.Slice:
-		return Clean(t.Elem())
+	case reflect.Ptr:
+		return reflect.PtrTo(Clean(t.Elem()))
+	case reflect.Map:
+		return reflect.MapOf(t.Key(), Clean(t.Elem()))
+	case reflect.Array:
+		return reflect.ArrayOf(t.Len(), Clean(t.Elem()))
+	case reflect.Slice:
+		return reflect.SliceOf(Clean(t.Elem()))
 	case reflect.Struct:
 		fields := make([]reflect.StructField, t.NumField())
 		for i := 0; i < t.NumField(); i++ {

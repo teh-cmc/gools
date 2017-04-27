@@ -49,4 +49,13 @@ func TestTagcleaner_Clean(t *testing.T) {
 	if strings.Contains(cleansed, "tag") {
 		t.Error("cleansed dump should NOT contain tags")
 	}
+	if !strings.Contains(cleansed, "[]") {
+		t.Error("cleansed dump should still contain slice markers")
+	}
+	if !strings.Contains(cleansed, "3]") {
+		t.Error("cleansed dump should still contain array markers")
+	}
+	if !strings.Contains(cleansed, "*") {
+		t.Error("cleansed dump should still contain pointer markers")
+	}
 }
