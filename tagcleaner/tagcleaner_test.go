@@ -5,19 +5,20 @@ import (
 	"reflect"
 	"strings"
 	"testing"
+	"time"
 )
 
 // -----------------------------------------------------------------------------
 
 func TestTagcleaner_Clean(t *testing.T) {
 	type someStruct struct {
-		A string   "tag-A"
-		B []string "tag-B"
+		A time.Time   "tag-A"
+		B []time.Time "tag-B"
 		C map[string]*struct {
 			A string "tag-C-A"
 			B string "tag-C-B"
 		} "tag-C"
-		D map[int32]string "tag-D"
+		D map[int32]time.Duration "tag-D"
 		E struct {
 			A int64 "tag-E-A"
 			B int32 "tag-E-B"
