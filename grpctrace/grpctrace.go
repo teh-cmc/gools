@@ -46,5 +46,6 @@ func ExtractSpan(ctx context.Context, opName string) (ot.Span, context.Context) 
 	if err != nil {
 		return ot.StartSpanFromContext(ctx, opName)
 	}
-	return ot.StartSpan(opName, ot.ChildOf(sc)), ot.ContextWithSpan(ctx, span)
+	span = ot.StartSpan(opName, ot.ChildOf(sc))
+	return span, ot.ContextWithSpan(ctx, span)
 }
