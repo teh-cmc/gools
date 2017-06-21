@@ -1,4 +1,4 @@
-package grpctrace
+package tracing
 
 import (
 	"context"
