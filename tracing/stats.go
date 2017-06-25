@@ -28,6 +28,16 @@ var Buckets = []float64{
 	100e3, 200e3, 300e3, 400e3, 500e3, 600e3, 700e3, 800e3, 900e3,
 }
 
+// TagErr returns a metric tag that's either 'err=false' or 'err=true'
+// depending on the specified error.
+func TagErr(err error) stats.Tag {
+	errTag := stats.Tag{Name: "err", Value: "false"}
+	if err != nil {
+		errTag.Value = "true"
+	}
+	return errTag
+}
+
 // -----------------------------------------------------------------------------
 
 const _startTimeField = "startTime" // jaeger's span private StartTime field
@@ -56,13 +66,8 @@ func Finish(span ot.Span, err error) {
 			return
 		}
 
-		errTag := stats.Tag{Name: "err", Value: "false"}
-		if err != nil {
-			errTag.Value = "true"
-		}
-
 		startTime = (*time.Time)(unsafe.Pointer(startPtr))
 		d := time.Since(*startTime) / time.Microsecond
-		stats.Observe(s.OperationName(), float64(d), errTag)
+		stats.Observe(s.OperationName(), float64(d), TagErr(err))
 	}
 }
