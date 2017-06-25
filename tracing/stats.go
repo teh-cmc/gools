@@ -28,14 +28,20 @@ var Buckets = []float64{
 	100e3, 200e3, 300e3, 400e3, 500e3, 600e3, 700e3, 800e3, 900e3,
 }
 
+// -----------------------------------------------------------------------------
+
+const _startTimeField = "startTime" // jaeger's span private StartTime field
+
 // Finish finishes the specified `span`.
 //
 // If and only if the span is implemented by a `jaeger.Span`, a metric with
 // the name and duration of the span will be sent out using the 'stats' library
 // from Segment ('github.com/segmentio/stats').
+// If the specified error is not nil, the metric will be tagged with an
+// 'err=true' KV pair.
 //
 // TODO(cmc): tests
-func Finish(span ot.Span) {
+func Finish(span ot.Span, err error) {
 	defer span.Finish()
 	if s, ok := span.(*jaeger.Span); ok {
 		op := s.OperationName()
@@ -45,13 +51,18 @@ func Finish(span ot.Span) {
 		}
 
 		var startTime *time.Time
-		startPtr := reflect.ValueOf(s).Elem().FieldByName("startTime").UnsafeAddr()
+		startPtr := reflect.ValueOf(s).Elem().FieldByName(_startTimeField).UnsafeAddr()
 		if startPtr == 0 { // should not happen, unless struct schema changes
 			return
 		}
 
+		errTag := stats.Tag{Name: "err", Value: "false"}
+		if err != nil {
+			errTag.Value = "true"
+		}
+
 		startTime = (*time.Time)(unsafe.Pointer(startPtr))
 		d := time.Since(*startTime) / time.Microsecond
-		stats.Observe(s.OperationName(), float64(d))
+		stats.Observe(s.OperationName(), float64(d), errTag)
 	}
 }
