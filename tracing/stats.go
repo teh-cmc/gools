@@ -22,10 +22,12 @@ import (
 //  0ms   2ms   4ms   6ms   8ms
 //  10ms  20ms  30ms  40ms  50ms  60ms  70ms  80ms  90ms
 //  100ms 200ms 300ms 400ms 500ms 600ms 700ms 800ms 900ms
+//  1s    2s    3s    4s    5s    6s    7s    8s    9s
 var Buckets = []float64{
 	0, 2e3, 4e3, 6e3, 8e3,
 	10e3, 20e3, 30e3, 40e3, 50e3, 60e3, 70e3, 80e3, 90e3,
 	100e3, 200e3, 300e3, 400e3, 500e3, 600e3, 700e3, 800e3, 900e3,
+	1e6, 2e6, 3e6, 4e6, 5e6, 6e6, 7e6, 8e6, 9e6,
 }
 
 // TagErr returns a metric tag that's either 'err=false' or 'err=true'
