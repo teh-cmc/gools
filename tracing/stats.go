@@ -2,6 +2,7 @@ package tracing
 
 import (
 	"reflect"
+	"sync"
 	"time"
 	"unsafe"
 
@@ -44,6 +45,11 @@ func TagErr(err error) stats.Tag {
 
 const _startTimeField = "startTime" // jaeger's span private StartTime field
 
+var (
+	_bucketedOps     = map[string]struct{}{} // already bucketed histograms
+	_bucketedOpsLock = &sync.RWMutex{}
+)
+
 // Finish finishes the specified `span`.
 //
 // If and only if the span is implemented by a `jaeger.Span`, a metric with
@@ -58,8 +64,13 @@ func Finish(span ot.Span, err error) {
 	if s, ok := span.(*jaeger.Span); ok {
 		op := s.OperationName()
 
-		if _, ok := stats.DefaultEngine.HistogramBuckets()[op]; !ok {
-			stats.DefaultEngine.SetHistogramBuckets(s.OperationName(), Buckets...)
+		_bucketedOpsLock.RLock()
+		_, ok = _bucketedOps[op]
+		_bucketedOpsLock.RUnlock()
+		if !ok {
+			_bucketedOpsLock.Lock()
+			stats.DefaultEngine.SetHistogramBuckets(op, Buckets...)
+			_bucketedOpsLock.Unlock()
 		}
 
 		var startTime *time.Time
@@ -70,6 +81,6 @@ func Finish(span ot.Span, err error) {
 
 		startTime = (*time.Time)(unsafe.Pointer(startPtr))
 		d := time.Since(*startTime) / time.Microsecond
-		stats.Observe(s.OperationName(), float64(d), TagErr(err))
+		stats.Observe(op, float64(d), TagErr(err))
 	}
 }
