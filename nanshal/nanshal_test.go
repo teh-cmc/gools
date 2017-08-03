@@ -11,6 +11,8 @@ import (
 // -----------------------------------------------------------------------------
 
 type Floats struct {
+	A  float32
+	B  float64
 	X  float64
 	Y  int32
 	ZZ *float64
@@ -25,6 +27,8 @@ type Floats struct {
 func TestNanshal_MarshalValue(t *testing.T) {
 	zz := math.NaN()
 	before := Floats{
+		A:  1.0,
+		B:  2.0,
 		X:  math.NaN(),
 		Y:  42,
 		ZZ: &zz,
@@ -39,6 +43,8 @@ func TestNanshal_MarshalValue(t *testing.T) {
 		SS: "coucou",
 	}
 	expected := Floats{
+		A:  1.0,
+		B:  2.0,
 		X:  0.0,
 		Y:  42,
 		ZZ: &zz,

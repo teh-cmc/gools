@@ -2,6 +2,7 @@ package nanshal
 
 import (
 	"encoding/json"
+	"math"
 	"reflect"
 	"strings"
 )
@@ -43,13 +44,9 @@ func unNaNifiyFloats(v reflect.Value, root bool) reflect.Value {
 		return v
 	}
 	switch v.Kind() {
-	case reflect.Float32:
-		if v.CanSet() {
-			v.Set(reflect.ValueOf(float32(0)))
-		}
-	case reflect.Float64:
-		if v.CanSet() {
-			v.Set(reflect.ValueOf(float64(0)))
+	case reflect.Float32, reflect.Float64:
+		if vv := v.Float(); math.IsNaN(vv) && v.CanSet() {
+			v.SetFloat(0.0)
 		}
 	case reflect.Ptr:
 		return unNaNifiyFloats(v.Elem(), false)
