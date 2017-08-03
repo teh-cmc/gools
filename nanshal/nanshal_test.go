@@ -13,6 +13,10 @@ import (
 type Floats struct {
 	A  float32
 	B  float64
+	I  float32
+	J  float32
+	K  float64
+	L  float64
 	X  float64
 	Y  int32
 	ZZ *float64
@@ -29,6 +33,10 @@ func TestNanshal_MarshalValue(t *testing.T) {
 	before := Floats{
 		A:  1.0,
 		B:  2.0,
+		I:  float32(math.Inf(-1)),
+		J:  float32(math.Inf(1)),
+		K:  float64(math.Inf(-1)),
+		L:  float64(math.Inf(1)),
 		X:  math.NaN(),
 		Y:  42,
 		ZZ: &zz,
@@ -45,6 +53,10 @@ func TestNanshal_MarshalValue(t *testing.T) {
 	expected := Floats{
 		A:  1.0,
 		B:  2.0,
+		I:  float32(-math.MaxFloat32),
+		J:  float32(math.MaxFloat32),
+		K:  float64(-math.MaxFloat64),
+		L:  float64(math.MaxFloat64),
 		X:  0.0,
 		Y:  42,
 		ZZ: &zz,

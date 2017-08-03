@@ -9,22 +9,38 @@ import (
 
 // -----------------------------------------------------------------------------
 
-// MarshalInterface marshals an interface value even if it embeds NaN floats.
+var (
+	_floatErrs = [...]string{"NaN", "+Inf", "-Inf"}
+	_maxFloats = map[reflect.Kind]float64{
+		reflect.Float32: math.MaxFloat32,
+		reflect.Float64: math.MaxFloat64,
+	}
+)
+
+// MarshalInterface marshals an interface value even if it embeds NaN, +Inf or
+// -Inf float values.
 //
-// NaN values will be converted to 0.0.
+//  - NaN values will be converted to 0.0
+//  - +Inf values will be converted to _MAX_FLOAT_
+//  - -Inf values will be converted to -_MAX_FLOAT_
 func MarshalInterface(v interface{}) ([]byte, error) {
 	return MarshalValue(reflect.ValueOf(v))
 }
 
-// MarshalValue marshals a reflect.Value even if it embeds NaN floats.
+// MarshalValue marshals a reflect.Value even if it embeds NaN, +Inf or
+// -Inf float values.
 //
-// NaN values will be converted to 0.0.
+//  - NaN values will be converted to 0.0
+//  - +Inf values will be converted to _MAX_FLOAT_
+//  - -Inf values will be converted to -_MAX_FLOAT_
 func MarshalValue(v reflect.Value) (b []byte, err error) {
 	vi := v.Interface()
 	b, err = json.Marshal(vi)
 	if err != nil {
-		if strings.Contains(err.Error(), "NaN") {
-			return MarshalValue(UnNaNifiyFloats(v))
+		for _, e := range _floatErrs {
+			if strings.Contains(err.Error(), e) {
+				return MarshalValue(UnNaNifiyFloats(v))
+			}
 		}
 		return nil, err
 	}
@@ -33,8 +49,8 @@ func MarshalValue(v reflect.Value) (b []byte, err error) {
 
 // -----------------------------------------------------------------------------
 
-// UnNaNifiyFloats recursively walks through `v` and annihilates any NaN values
-// it might find along the way.
+// UnNaNifiyFloats recursively walks through `v` and annihilates any NaN, +Inf
+// or -Inf values it might find along the way.
 func UnNaNifiyFloats(v reflect.Value) reflect.Value {
 	return unNaNifiyFloats(v, true)
 }
@@ -45,8 +61,17 @@ func unNaNifiyFloats(v reflect.Value, root bool) reflect.Value {
 	}
 	switch v.Kind() {
 	case reflect.Float32, reflect.Float64:
-		if vv := v.Float(); math.IsNaN(vv) && v.CanSet() {
-			v.SetFloat(0.0)
+		vv := v.Float()
+		if v.CanSet() {
+			if math.IsNaN(vv) {
+				v.SetFloat(0.0)
+			}
+			if math.IsInf(vv, -1) {
+				v.SetFloat(-_maxFloats[v.Kind()])
+			}
+			if math.IsInf(vv, 1) {
+				v.SetFloat(_maxFloats[v.Kind()])
+			}
 		}
 	case reflect.Ptr:
 		return unNaNifiyFloats(v.Elem(), false)
