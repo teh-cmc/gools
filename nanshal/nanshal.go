@@ -23,8 +23,13 @@ var (
 //  - NaN values will be converted to 0.0
 //  - +Inf values will be converted to _MAX_FLOAT_
 //  - -Inf values will be converted to -_MAX_FLOAT_
-func MarshalInterface(v interface{}) ([]byte, error) {
-	return MarshalValue(reflect.ValueOf(v))
+// _MAX_FLOAT_ will be either 32 or 64 bits, depending on the struct-field that
+// contains it.
+//
+// If the optional `maxFloat` parameter is passed, this value will be used as
+// the _MAX_FLOAT_ value.
+func MarshalInterface(v interface{}, maxFloat ...float64) ([]byte, error) {
+	return MarshalValue(reflect.ValueOf(v), maxFloat...)
 }
 
 // MarshalValue marshals a reflect.Value even if it embeds NaN, +Inf or
@@ -33,13 +38,18 @@ func MarshalInterface(v interface{}) ([]byte, error) {
 //  - NaN values will be converted to 0.0
 //  - +Inf values will be converted to _MAX_FLOAT_
 //  - -Inf values will be converted to -_MAX_FLOAT_
-func MarshalValue(v reflect.Value) (b []byte, err error) {
+// _MAX_FLOAT_ will be either 32 or 64 bits, depending on the struct-field that
+// contains it.
+//
+// If the optional `maxFloat` parameter is passed, this value will be used as
+// the _MAX_FLOAT_ value.
+func MarshalValue(v reflect.Value, maxFloat ...float64) (b []byte, err error) {
 	vi := v.Interface()
 	b, err = json.Marshal(vi)
 	if err != nil {
 		for _, e := range _floatErrs {
 			if strings.Contains(err.Error(), e) {
-				return MarshalValue(UnNaNifiyFloats(v))
+				return MarshalValue(UnNaNifiyFloats(v, maxFloat...), maxFloat...)
 			}
 		}
 		return nil, err
@@ -51,10 +61,21 @@ func MarshalValue(v reflect.Value) (b []byte, err error) {
 
 // UnNaNifiyFloats recursively walks through `v` and annihilates any NaN, +Inf
 // or -Inf values it might find along the way.
-func UnNaNifiyFloats(v reflect.Value) reflect.Value {
-	return unNaNifiyFloats(v, true)
+//
+//  - NaN values will be converted to 0.0
+//  - +Inf values will be converted to _MAX_FLOAT_
+//  - -Inf values will be converted to -_MAX_FLOAT_
+// _MAX_FLOAT_ will be either 32 or 64 bits, depending on the struct-field that
+// contains it.
+//
+// If the optional `maxFloat` parameter is passed, this value will be used as
+// the _MAX_FLOAT_ value.
+func UnNaNifiyFloats(v reflect.Value, maxFloat ...float64) reflect.Value {
+	return unNaNifiyFloats(v, true, maxFloat...)
 }
-func unNaNifiyFloats(v reflect.Value, root bool) reflect.Value {
+func unNaNifiyFloats(
+	v reflect.Value, root bool, maxFloat ...float64,
+) reflect.Value {
 	// let's not adventure ourselves past the original package's boundaries
 	if !root && v.Type().PkgPath() != "" {
 		return v
@@ -67,29 +88,37 @@ func unNaNifiyFloats(v reflect.Value, root bool) reflect.Value {
 				v.SetFloat(0.0)
 			}
 			if math.IsInf(vv, -1) {
-				v.SetFloat(-_maxFloats[v.Kind()])
+				if len(maxFloat) > 0 {
+					v.SetFloat(-maxFloat[0])
+				} else {
+					v.SetFloat(-_maxFloats[v.Kind()])
+				}
 			}
 			if math.IsInf(vv, 1) {
-				v.SetFloat(_maxFloats[v.Kind()])
+				if len(maxFloat) > 0 {
+					v.SetFloat(maxFloat[0])
+				} else {
+					v.SetFloat(_maxFloats[v.Kind()])
+				}
 			}
 		}
 	case reflect.Ptr:
-		return unNaNifiyFloats(v.Elem(), false)
+		return unNaNifiyFloats(v.Elem(), false, maxFloat...)
 	case reflect.Map:
 		for _, k := range v.MapKeys() {
-			unNaNifiyFloats(v.MapIndex(k), false)
+			unNaNifiyFloats(v.MapIndex(k), false, maxFloat...)
 		}
 	case reflect.Array:
 		for i := 0; i < v.Len(); i++ {
-			unNaNifiyFloats(v.Index(i), false)
+			unNaNifiyFloats(v.Index(i), false, maxFloat...)
 		}
 	case reflect.Slice:
 		for i := 0; i < v.Len(); i++ {
-			unNaNifiyFloats(v.Index(i), false)
+			unNaNifiyFloats(v.Index(i), false, maxFloat...)
 		}
 	case reflect.Struct:
 		for i := 0; i < v.NumField(); i++ {
-			unNaNifiyFloats(v.Field(i), false)
+			unNaNifiyFloats(v.Field(i), false, maxFloat...)
 		}
 	}
 	return v
