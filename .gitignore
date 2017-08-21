@@ -33,3 +33,6 @@ app.conf.json
 docker.conf.json
 
 resources/
+
+./vendor
+./glide.lock
