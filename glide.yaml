@@ -13,7 +13,7 @@ import:
   subpackages:
   - metadata
 - package: github.com/apache/thrift
-  version: ^0.10.0
+  version: 0dd823580c78a79ae9696eb9b3650e400fff140f
   subpackages:
   - lib/go/thrift
 - package: github.com/codahale/hdrhistogram
