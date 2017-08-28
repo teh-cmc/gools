@@ -16,4 +16,4 @@ install:
     - glide cc
     - glide update -v --force
 script:
-    - go test -v -race -cpu 1,2,4,8 -cover -run=. -bench=. $(go list ./...)
+    - go test -race -cpu 1,2,4,8 -cover -run=. -bench=. ./counter ./env ./nanshal ./probe ./tagcleaner ./tracing ./zerocopy
