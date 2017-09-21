@@ -103,6 +103,9 @@ func unNaNifiyFloats(
 			}
 		}
 	case reflect.Ptr:
+		if v.IsNil() {
+			return v
+		}
 		return unNaNifiyFloats(v.Elem(), false, maxFloat...)
 	case reflect.Map:
 		for _, k := range v.MapKeys() {
