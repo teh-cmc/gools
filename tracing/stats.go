@@ -4,6 +4,7 @@ import (
 	"os"
 	"path"
 	"reflect"
+	"sync"
 	"time"
 	"unsafe"
 
@@ -41,6 +42,8 @@ type TracingProbes struct {
 	}
 }
 
+var _probesPool = sync.Pool{New: func() interface{} { return &TracingProbes{} }}
+
 func init() {
 	for i, hb := range HistogramBuckets {
 		HistogramBuckets[i] = time.Duration(hb.(float64)) * time.Microsecond
@@ -63,11 +66,10 @@ const _startTimeField = "startTime" // jaeger's span private StartTime field
 //
 // TODO(cmc): tests
 func Finish(span ot.Span, err error) {
-	defer span.Finish()
 	if s, ok := span.(*jaeger.Span); ok {
 		op := s.OperationName()
 
-		prb := &TracingProbes{}
+		prb := _probesPool.Get().(*TracingProbes)
 		prb.Ops.Name = op
 		if err != nil {
 			prb.Ops.Err = "true"
@@ -77,11 +79,16 @@ func Finish(span ot.Span, err error) {
 		var startTime *time.Time
 		startPtr := reflect.ValueOf(s).Elem().FieldByName(_startTimeField).UnsafeAddr()
 		if startPtr == 0 { // should not happen, unless struct schema changes
+			span.Finish()
+			_probesPool.Put(prb)
 			return
 		}
 
 		startTime = (*time.Time)(unsafe.Pointer(startPtr))
 		prb.Ops.Time = time.Since(*startTime)
 		stats.Report(prb)
+
+		_probesPool.Put(prb)
 	}
+	span.Finish()
 }
