@@ -1,8 +1,9 @@
 package tracing
 
 import (
+	"os"
+	"path"
 	"reflect"
-	"sync"
 	"time"
 	"unsafe"
 
@@ -13,7 +14,8 @@ import (
 
 // -----------------------------------------------------------------------------
 
-// Buckets define the histogram buckets that will be used to compute quantiles.
+// HistogramBuckets define the histogram buckets that will be used to
+// compute quantiles.
 //
 // Modifying this variable is safe as long as you do it before the calls to
 // `Finish` start coming in.
@@ -24,31 +26,32 @@ import (
 //  10ms  20ms  30ms  40ms  50ms  60ms  70ms  80ms  90ms
 //  100ms 200ms 300ms 400ms 500ms 600ms 700ms 800ms 900ms
 //  1s    2s    3s    4s    5s    6s    7s    8s    9s
-var Buckets = []float64{
-	0, 2e3, 4e3, 6e3, 8e3,
+var HistogramBuckets = []interface{}{
+	0e3, 2e3, 4e3, 6e3, 8e3,
 	10e3, 20e3, 30e3, 40e3, 50e3, 60e3, 70e3, 80e3, 90e3,
 	100e3, 200e3, 300e3, 400e3, 500e3, 600e3, 700e3, 800e3, 900e3,
 	1e6, 2e6, 3e6, 4e6, 5e6, 6e6, 7e6, 8e6, 9e6,
 }
 
-// TagErr returns a metric tag that's either 'err=false' or 'err=true'
-// depending on the specified error.
-func TagErr(err error) stats.Tag {
-	errTag := stats.Tag{Name: "err", Value: "false"}
-	if err != nil {
-		errTag.Value = "true"
+type TracingProbes struct {
+	Ops struct {
+		Time time.Duration `metric:"/tracing/ops/time" type:"histogram"`
+		Err  string        `tag:"err"`
+		Name string        `tag:"name"`
 	}
-	return errTag
+}
+
+func init() {
+	for i, hb := range HistogramBuckets {
+		HistogramBuckets[i] = time.Duration(hb.(float64)) * time.Microsecond
+	}
+	bin := path.Base(os.Args[0])
+	stats.Buckets.Set(bin+":/tracing/ops/time", HistogramBuckets...)
 }
 
 // -----------------------------------------------------------------------------
 
 const _startTimeField = "startTime" // jaeger's span private StartTime field
-
-var (
-	_bucketedOps     = map[string]struct{}{} // already bucketed histograms
-	_bucketedOpsLock = &sync.RWMutex{}
-)
 
 // Finish finishes the specified `span`.
 //
@@ -64,14 +67,12 @@ func Finish(span ot.Span, err error) {
 	if s, ok := span.(*jaeger.Span); ok {
 		op := s.OperationName()
 
-		_bucketedOpsLock.RLock()
-		_, ok = _bucketedOps[op]
-		_bucketedOpsLock.RUnlock()
-		if !ok {
-			_bucketedOpsLock.Lock()
-			stats.DefaultEngine.SetHistogramBuckets(op, Buckets...)
-			_bucketedOpsLock.Unlock()
+		prb := &TracingProbes{}
+		prb.Ops.Name = op
+		if err != nil {
+			prb.Ops.Err = "true"
 		}
+		prb.Ops.Err = "false"
 
 		var startTime *time.Time
 		startPtr := reflect.ValueOf(s).Elem().FieldByName(_startTimeField).UnsafeAddr()
@@ -80,7 +81,7 @@ func Finish(span ot.Span, err error) {
 		}
 
 		startTime = (*time.Time)(unsafe.Pointer(startPtr))
-		d := time.Since(*startTime) / time.Microsecond
-		stats.Observe(op, float64(d), TagErr(err))
+		prb.Ops.Time = time.Since(*startTime)
+		stats.Report(prb)
 	}
 }
