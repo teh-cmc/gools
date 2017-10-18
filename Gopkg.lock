@@ -46,8 +46,7 @@
 [[projects]]
   name = "github.com/segmentio/stats"
   packages = ["."]
-  revision = "29b56b24d9fb484874321b8e0f7d99e4b58ead25"
-  version = "3.1.0"
+  revision = "d5453edb8b8c439289c9dc721312766836a0909d"
 
 [[projects]]
   name = "github.com/stretchr/testify"
@@ -100,6 +99,6 @@
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "0971bc915f5e092973407975cf357a3578c27640d6aba41bf9f8c89615524b74"
+  inputs-digest = "cc1632715719f93bb2fb23b3a210741810a54e86a53a0bc1f571a1535682fe92"
   solver-name = "gps-cdcl"
   solver-version = 1

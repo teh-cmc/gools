@@ -35,7 +35,7 @@
 
 [[constraint]]
   name = "github.com/segmentio/stats"
-  version = "~3.1.0"
+  revision = "d5453edb8b8c439289c9dc721312766836a0909d"
 
 [[constraint]]
   name = "github.com/stretchr/testify"
