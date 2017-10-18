@@ -34,5 +34,4 @@ docker.conf.json
 
 resources/
 
-./vendor
-./glide.lock
+/vendor
