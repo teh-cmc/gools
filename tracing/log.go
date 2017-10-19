@@ -1,8 +1,6 @@
 package tracing
 
 import (
-	"context"
-
 	ot "github.com/opentracing/opentracing-go"
 	ot_ext "github.com/opentracing/opentracing-go/ext"
 	ot_log "github.com/opentracing/opentracing-go/log"
@@ -23,11 +21,6 @@ func LogError(err error,
 	ot_ext.Error.Set(span, true)
 	span.LogFields(ot_log.Error(err))
 	span.LogFields(fields...)
-
-	if err == context.Canceled {
-		// don't log to console for canceled contexts
-		return
-	}
 
 	/* zap */
 	zapFields := make([]zapcore.Field, 0, len(fields))
