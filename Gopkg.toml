@@ -52,3 +52,8 @@
 [[constraint]]
   name = "google.golang.org/grpc"
   version = "1.*"
+
+## NOTE(cmc): https://github.com/jaegertracing/jaeger-client-go/issues/184
+[[override]]
+  name = "github.com/apache/thrift"
+  version = "0.10.*"
